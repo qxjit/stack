@@ -79,6 +79,7 @@ fillPathInfo = do
      snaproot <- installationRootDeps
      localroot <- installationRootLocal
      toolsDir <- bindirCompilerTools
+     hoogle <- hoogleRoot
      distDir <- distRelativeDir
      hpcDir <- hpcReportDir
      compiler <- getCompilerPath whichCompiler
@@ -89,6 +90,7 @@ fillPathInfo = do
                        snaproot
                        localroot
                        toolsDir
+                       hoogle
                        distDir
                        hpcDir
                        extra
@@ -113,6 +115,7 @@ data PathInfo = PathInfo
     , piSnapRoot     :: Path Abs Dir
     , piLocalRoot    :: Path Abs Dir
     , piToolsDir     :: Path Abs Dir
+    , piHoogleRoot   :: Path Abs Dir
     , piDistDir      :: Path Rel Dir
     , piHpcDir       :: Path Abs Dir
     , piExtraDbs     :: [Path Abs Dir]
@@ -203,6 +206,9 @@ paths =
     , ( "Local project documentation root"
       , "local-doc-root"
       , UseHaddocks $ \pi' -> T.pack (toFilePathNoTrailingSep (piLocalRoot pi' </> docDirSuffix)))
+    , ( "Local project documentation root"
+      , "local-hoogle-root"
+      , UseHaddocks $ T.pack . toFilePathNoTrailingSep . piHoogleRoot)
     , ( "Dist work directory, relative to package directory"
       , "dist-dir"
       , WithoutHaddocks $ T.pack . toFilePathNoTrailingSep . piDistDir )
