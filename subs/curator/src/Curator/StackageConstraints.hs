@@ -13,6 +13,7 @@ import Curator.Types
 import RIO
 import qualified RIO.Text as T
 import qualified RIO.Map as Map
+import RIO.Set ((\\))
 import qualified RIO.Set as Set
 import Distribution.Types.VersionRange (VersionRange, intersectVersionRanges)
 import Data.Yaml
@@ -128,11 +129,20 @@ loadStackageConstraints = decodeFileThrow >=> convert
 
 convert :: SC -> RIO env Constraints
 convert sc0 = do
-  let (sc1, packages, errs) =
+  let constrained = Map.keysSet (scFlags sc0) <>
+        scSkippedBuilds sc0 <> scSkippedTests sc0 <>
+        scExpectedTestFailures sc0 <> scSkippedBenchmarks sc0 <>
+        scExpectedBenchmarkFailures sc0 <> scExpectedHaddockFailures sc0 <>
+        scSkippedHaddocks sc0 <> scHide sc0 <>
+        scNoRevisions sc0 <> scNonParallelBuilds sc0
+      maintained = Map.keysSet $ scPackages sc0
+      orphaned = constrained \\ maintained
+      x = scPackages sc0 <> Map.fromSet (const mempty) orphaned
+      (sc1, packages, errs) =
         foldl'
           go
           (sc0, mempty, [])
-          (Map.toList (scPackages sc0))
+          (Map.toList x)
   unless (null errs) $ error $ unlines errs
   -- check that all of the fields are empty now
   pure Constraints
