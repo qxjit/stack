@@ -611,6 +611,7 @@ data Curator = Curator
   { curatorSkipTest :: !(Set PackageName)
   , curatorExpectTestFailure :: !(Set PackageName)
   , curatorSkipBenchmark :: !(Set PackageName)
+  , curatorExpectBenchmarkFailure :: !(Set PackageName)
   , curatorSkipHaddock :: !(Set PackageName)
   , curatorExpectHaddockFailure :: !(Set PackageName)
   }
@@ -620,6 +621,7 @@ instance ToJSON Curator where
     [ "skip-test" .= Set.map CabalString (curatorSkipTest c)
     , "expect-test-failure" .= Set.map CabalString (curatorExpectTestFailure c)
     , "skip-bench" .= Set.map CabalString (curatorSkipBenchmark c)
+    , "expect-benchmark-failure" .= Set.map CabalString (curatorExpectTestFailure c)
     , "skip-haddock" .= Set.map CabalString (curatorSkipHaddock c)
     , "expect-test-failure" .= Set.map CabalString (curatorExpectHaddockFailure c)
     ]
@@ -628,6 +630,7 @@ instance FromJSON (WithJSONWarnings Curator) where
     <$> fmap (Set.map unCabalString) (o ..:? "skip-test" ..!= mempty)
     <*> fmap (Set.map unCabalString) (o ..:? "expect-test-failure" ..!= mempty)
     <*> fmap (Set.map unCabalString) (o ..:? "skip-bench" ..!= mempty)
+    <*> fmap (Set.map unCabalString) (o ..:? "expect-benchmark-failure" ..!= mempty)
     <*> fmap (Set.map unCabalString) (o ..:? "skip-haddock" ..!= mempty)
     <*> fmap (Set.map unCabalString) (o ..:? "expect-haddock-failure" ..!= mempty)
 
