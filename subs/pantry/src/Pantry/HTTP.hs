@@ -5,15 +5,20 @@ module Pantry.HTTP
   , withResponse
   , httpSink
   , httpSinkChecked
+  , httpJSON
+  , httpLbs
   ) where
 
 import           Conduit
+import           Data.Aeson (FromJSON)
 import           Network.HTTP.Client          as Export (parseRequest)
 import           Network.HTTP.Client          as Export (parseUrlThrow)
+import           Network.HTTP.Client          as Export (getUri, path, checkResponse)
 import           Network.HTTP.Client          as Export (BodyReader, HttpExceptionContent (StatusCodeException))
 import qualified Network.HTTP.Client          as HTTP (withResponse)
 import           Network.HTTP.Client.Internal as Export (setUri)
 import           Network.HTTP.Client.TLS      (getGlobalManager)
+import           Network.HTTP.Conduit         as Export (requestHeaders)
 import           Network.HTTP.Simple          as Export (HttpException (..),
                                                          Request, Response,
                                                          addRequestHeader,
@@ -21,11 +26,13 @@ import           Network.HTTP.Simple          as Export (HttpException (..),
                                                          getResponseBody,
                                                          getResponseHeaders,
                                                          getResponseStatus,
+                                                         getResponseStatusCode,
                                                          setRequestHeader,
                                                          setRequestHeaders)
 import qualified Network.HTTP.Simple          as HTTP hiding (withResponse)
 import           Network.HTTP.Types           as Export (Header, HeaderName,
                                                          Status, hCacheControl,
+                                                         hContentLength, hContentMD5,
                                                          hRange, ok200,
                                                          partialContent206,
                                                          statusCode)
@@ -100,3 +107,10 @@ httpSinkChecked url msha msize sink = do
                       , mismatchActual = FileSize accum'
                       }
                 _ -> loop accum'
+
+httpJSON :: (MonadIO m, FromJSON a) => Request -> m (Response a)
+httpJSON = HTTP.httpJSON . setUserAgent
+
+
+httpLbs :: MonadIO m => Request -> m (Response LByteString)
+httpLbs = HTTP.httpLbs . setUserAgent

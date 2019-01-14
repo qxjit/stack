@@ -1,14 +1,13 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-module Network.HTTP.Download.VerifiedSpec where
+module Pantry.HTTP.Download.VerifiedSpec where
 
-import           Control.Retry                  (limitRetries)
+import           Control.Retry                  (RetryStatus, limitRetries)
 import           Crypto.Hash
-import           Network.HTTP.StackClient
-import           Network.HTTP.Download.Verified
+import           Pantry.HTTP
+import           Pantry.HTTP.Download.Verified
 import           Path
-import           Path.IO hiding (withSystemTempDir)
-import           Stack.Prelude
-import           Stack.Types.Runner
+import           Path.IO
+import           RIO
 import           System.IO (writeFile, readFile)
 import           Test.Hspec
 
@@ -66,23 +65,23 @@ spec = do
   let exampleProgressHook _ = return ()
 
   describe "verifiedDownload" $ do
-    let run func =
-          withRunner LevelError True True ColorNever mempty Nothing False
-                 $ \runner -> runRIO runner func
+    let voidLf = mkLogFunc $ \_ _ _ _ -> return ()
+        run func = runRIO voidLf func
+
     -- Preconditions:
     -- * the exampleReq server is running
     -- * the test runner has working internet access to it
     it "downloads the file correctly" $ withTempDir' $ \dir -> do
       examplePath <- getExamplePath dir
       doesFileExist examplePath `shouldReturn` False
-      let go = run $ verifiedDownload exampleReq examplePath exampleProgressHook
+      let go = run $ verifiedDownload noWarn exampleReq examplePath exampleProgressHook
       go `shouldReturn` True
       doesFileExist examplePath `shouldReturn` True
 
     it "is idempotent, and doesn't redownload unnecessarily" $ withTempDir' $ \dir -> do
       examplePath <- getExamplePath dir
       doesFileExist examplePath `shouldReturn` False
-      let go = run $ verifiedDownload exampleReq examplePath exampleProgressHook
+      let go = run $ verifiedDownload noWarn exampleReq examplePath exampleProgressHook
       go `shouldReturn` True
       doesFileExist examplePath `shouldReturn` True
       go `shouldReturn` False
@@ -95,7 +94,7 @@ spec = do
       writeFile exampleFilePath exampleWrongContent
       doesFileExist examplePath `shouldReturn` True
       readFile exampleFilePath `shouldReturn` exampleWrongContent
-      let go = run $ verifiedDownload exampleReq examplePath exampleProgressHook
+      let go = run $ verifiedDownload noWarn exampleReq examplePath exampleProgressHook
       go `shouldReturn` True
       doesFileExist examplePath `shouldReturn` True
       readFile exampleFilePath `shouldNotReturn` exampleWrongContent
@@ -105,7 +104,7 @@ spec = do
       let wrongContentLengthReq = exampleReq
             { drLengthCheck = Just exampleWrongContentLength
             }
-      let go = run $ verifiedDownload wrongContentLengthReq examplePath exampleProgressHook
+      let go = run $ verifiedDownload noWarn wrongContentLengthReq examplePath exampleProgressHook
       go `shouldThrow` isWrongContentLength
       doesFileExist examplePath `shouldReturn` False
 
@@ -113,7 +112,7 @@ spec = do
       examplePath <- getExamplePath dir
       let wrongHashCheck = exampleHashCheck { hashCheckHexDigest = exampleWrongDigest }
       let wrongDigestReq = exampleReq { drHashChecks = [wrongHashCheck] }
-      let go = run $ verifiedDownload wrongDigestReq examplePath exampleProgressHook
+      let go = run $ verifiedDownload noWarn wrongDigestReq examplePath exampleProgressHook
       go `shouldThrow` isWrongDigest
       doesFileExist examplePath `shouldReturn` False
 
@@ -127,7 +126,10 @@ spec = do
             , drLengthCheck = Nothing
             , drRetryPolicy = limitRetries 1
             }
-      let go = run $ verifiedDownload dReq dest exampleProgressHook
+      let go = run $ verifiedDownload noWarn dReq dest exampleProgressHook
       doesFileExist dest `shouldReturn` False
       go `shouldReturn` True
       doesFileExist dest `shouldReturn` True
+
+noWarn :: RetryStatus -> RIO env ()
+noWarn _ = return ()

@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.30.0.
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bfc4bfcec8fa396290c6a92012ae46cae07ca2bd329e9ae0ca7aaec18202474f
+-- hash: 09bc8b601193ba3fe9888a6445f6ca9f8ffe3de0e4aa8e78bfe4acd27c5fcbac
 
 name:           pantry
 version:        0.1.0.0
@@ -30,6 +30,9 @@ source-repository head
 library
   exposed-modules:
       Pantry
+      Pantry.HTTP
+      Pantry.HTTP.Download
+      Pantry.HTTP.Download.Verified
       Pantry.SHA256
       Pantry.Internal
       Pantry.Internal.StaticBytes
@@ -40,7 +43,6 @@ library
       Hackage.Security.Client.Repository.HttpLib.HttpClient
       Pantry.Archive
       Pantry.Hackage
-      Pantry.HTTP
       Pantry.Repo
       Pantry.Storage
       Pantry.Tree
@@ -67,6 +69,7 @@ library
     , deepseq
     , digest
     , directory
+    , exceptions
     , filepath
     , generic-deriving
     , ghc-prim
@@ -90,6 +93,7 @@ library
     , primitive
     , resource-pool
     , resourcet
+    , retry
     , rio
     , rio-orphans
     , safe
@@ -133,6 +137,7 @@ test-suite spec
       Pantry.CabalSpec
       Pantry.FileSpec
       Pantry.HackageSpec
+      Pantry.HTTP.Download.VerifiedSpec
       Pantry.Internal.StaticBytesSpec
       Pantry.InternalSpec
       Pantry.TreeSpec
@@ -187,6 +192,7 @@ test-suite spec
     , primitive
     , resource-pool
     , resourcet
+    , retry
     , rio
     , rio-orphans
     , safe

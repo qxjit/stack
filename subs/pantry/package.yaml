@@ -83,6 +83,8 @@ dependencies:
 - base64-bytestring
 - directory
 - filepath
+- retry
+- exceptions
 
 library:
   source-dirs: src/
@@ -95,6 +97,9 @@ library:
 
   exposed-modules:
   - Pantry
+  - Pantry.HTTP
+  - Pantry.HTTP.Download
+  - Pantry.HTTP.Download.Verified
   - Pantry.SHA256
 
   # For testing
